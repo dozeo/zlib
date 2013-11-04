@@ -8,6 +8,9 @@
 *.lo
 *.o
 *.dylib
+*.exe
+gtest-1.6.0/
+*.dll
 
 *.gcda
 *.gcno
