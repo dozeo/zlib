@@ -2,6 +2,7 @@
 *.patch
 *.orig
 *.rej
+zconf.h
 
 *~
 *.a
@@ -11,6 +12,8 @@
 *.exe
 gtest-1.6.0/
 *.dll
+build/
+zconf.h.included
 
 *.gcda
 *.gcno
