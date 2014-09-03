@@ -5,6 +5,9 @@ project(zlib C)
 
 set(VERSION "1.2.8")
 
+option(BUILD_ZLIB_EXAMPLE "Build zlib example executable" ON)
+option(BUILD_MINIGZIP "Build minigzip executable" ON)
+
 option(ASM686 "Enable building i686 assembly implementation")
 option(AMD64 "Enable building amd64 assembly implementation")
 
@@ -188,6 +191,12 @@ add_library(zlibstatic STATIC ${ZLIB_SRCS} ${ZLIB_ASMS} ${ZLIB_PUBLIC_HDRS} ${ZL
 set_target_properties(zlib PROPERTIES DEFINE_SYMBOL ZLIB_DLL)
 set_target_properties(zlib PROPERTIES SOVERSION 1)
 
+set_target_properties(zlib PROPERTIES
+	INTERFACE_INCLUDE_DIRECTORIES "${CMAKE_CURRENT_SOURCE_DIR};${CMAKE_CURRENT_BINARY_DIR}")
+
+set_target_properties(zlibstatic PROPERTIES
+	INTERFACE_INCLUDE_DIRECTORIES "${CMAKE_CURRENT_SOURCE_DIR};${CMAKE_CURRENT_BINARY_DIR}")
+
 if(NOT CYGWIN)
     # This property causes shared libraries on Linux to have the full version
     # encoded into their final filename.  We disable this on Cygwin because
@@ -230,12 +239,16 @@ endif()
 # Example binaries
 #============================================================================
 
-add_executable(example test/example.c)
-target_link_libraries(example zlib)
-add_test(example example)
+if (BUILD_ZLIB_EXAMPLE)
+	add_executable(example test/example.c)
+	target_link_libraries(example zlib)
+	add_test(example example)
+endif()
 
-add_executable(minigzip test/minigzip.c)
-target_link_libraries(minigzip zlib)
+if (BUILD_MINIGZIP)
+	add_executable(minigzip test/minigzip.c)
+	target_link_libraries(minigzip zlib)
+endif()
 
 if(HAVE_OFF64_T)
     add_executable(example64 test/example.c)
