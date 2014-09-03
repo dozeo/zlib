@@ -3,6 +3,7 @@
 *.orig
 *.rej
 zconf.h
+configure.log
 
 *~
 *.a
