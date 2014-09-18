@@ -5,8 +5,8 @@ project(zlib C)
 
 set(VERSION "1.2.8")
 
-option(BUILD_ZLIB_EXAMPLE "Build zlib example executable" ON)
-option(BUILD_MINIGZIP "Build minigzip executable" ON)
+option(BUILD_ZLIB_EXAMPLE "Build zlib example executable" OFF)
+option(BUILD_MINIGZIP "Build minigzip executable" OFF)
 
 option(ASM686 "Enable building i686 assembly implementation")
 option(AMD64 "Enable building amd64 assembly implementation")
@@ -83,9 +83,9 @@ endif()
 
 set(ZLIB_PC ${CMAKE_CURRENT_BINARY_DIR}/zlib.pc)
 configure_file( ${CMAKE_CURRENT_SOURCE_DIR}/zlib.pc.cmakein
-		${ZLIB_PC} @ONLY)
-configure_file(	${CMAKE_CURRENT_SOURCE_DIR}/zconf.h.cmakein
-		${CMAKE_CURRENT_BINARY_DIR}/zconf.h @ONLY)
+        ${ZLIB_PC} @ONLY)
+configure_file( ${CMAKE_CURRENT_SOURCE_DIR}/zconf.h.cmakein
+        ${CMAKE_CURRENT_BINARY_DIR}/zconf.h @ONLY)
 include_directories(${CMAKE_CURRENT_BINARY_DIR} ${CMAKE_SOURCE_DIR})
 
 
@@ -139,30 +139,30 @@ if(CMAKE_COMPILER_IS_GNUCC)
         set(ZLIB_ASMS contrib/amd64/amd64-match.S)
     endif ()
 
-	if(ZLIB_ASMS)
-		add_definitions(-DASMV)
-		set_source_files_properties(${ZLIB_ASMS} PROPERTIES LANGUAGE C COMPILE_FLAGS -DNO_UNDERLINE)
-	endif()
+    if(ZLIB_ASMS)
+        add_definitions(-DASMV)
+        set_source_files_properties(${ZLIB_ASMS} PROPERTIES LANGUAGE C COMPILE_FLAGS -DNO_UNDERLINE)
+    endif()
 endif()
 
 if(MSVC)
     if(ASM686)
-		ENABLE_LANGUAGE(ASM_MASM)
+        ENABLE_LANGUAGE(ASM_MASM)
         set(ZLIB_ASMS
-			contrib/masmx86/inffas32.asm
-			contrib/masmx86/match686.asm
-		)
+            contrib/masmx86/inffas32.asm
+            contrib/masmx86/match686.asm
+        )
     elseif (AMD64)
-		ENABLE_LANGUAGE(ASM_MASM)
+        ENABLE_LANGUAGE(ASM_MASM)
         set(ZLIB_ASMS
-			contrib/masmx64/gvmat64.asm
-			contrib/masmx64/inffasx64.asm
-		)
+            contrib/masmx64/gvmat64.asm
+            contrib/masmx64/inffasx64.asm
+        )
     endif()
 
-	if(ZLIB_ASMS)
-		add_definitions(-DASMV -DASMINF)
-	endif()
+    if(ZLIB_ASMS)
+        add_definitions(-DASMV -DASMINF)
+    endif()
 endif()
 
 # parse the full version number from zlib.h and include in ZLIB_FULL_VERSION
@@ -188,14 +188,24 @@ endif(MINGW)
 
 add_library(zlib SHARED ${ZLIB_SRCS} ${ZLIB_ASMS} ${ZLIB_DLL_SRCS} ${ZLIB_PUBLIC_HDRS} ${ZLIB_PRIVATE_HDRS})
 add_library(zlibstatic STATIC ${ZLIB_SRCS} ${ZLIB_ASMS} ${ZLIB_PUBLIC_HDRS} ${ZLIB_PRIVATE_HDRS})
-set_target_properties(zlib PROPERTIES DEFINE_SYMBOL ZLIB_DLL)
-set_target_properties(zlib PROPERTIES SOVERSION 1)
+set_target_properties(zlibstatic PROPERTIES
+    OUTPUT_NAME "libz"
+    PREFIX ""
+    IMPORT_PREFIX "")
 
 set_target_properties(zlib PROPERTIES
-	INTERFACE_INCLUDE_DIRECTORIES "${CMAKE_CURRENT_SOURCE_DIR};${CMAKE_CURRENT_BINARY_DIR}")
+    OUTPUT_NAME "libz"
+    PREFIX ""
+    IMPORT_PREFIX ""
+    IMPORT_SUFFIX ".dll${CMAKE_STATIC_LIBRARY_SUFFIX}"
+    DEFINE_SYMBOL ZLIB_DLL
+    SOVERSION 1)
+
+set_target_properties(zlib PROPERTIES
+    INTERFACE_INCLUDE_DIRECTORIES "${CMAKE_CURRENT_SOURCE_DIR};${CMAKE_CURRENT_BINARY_DIR}")
 
 set_target_properties(zlibstatic PROPERTIES
-	INTERFACE_INCLUDE_DIRECTORIES "${CMAKE_CURRENT_SOURCE_DIR};${CMAKE_CURRENT_BINARY_DIR}")
+    INTERFACE_INCLUDE_DIRECTORIES "${CMAKE_CURRENT_SOURCE_DIR};${CMAKE_CURRENT_BINARY_DIR}")
 
 if(NOT CYGWIN)
     # This property causes shared libraries on Linux to have the full version
@@ -208,15 +218,8 @@ if(NOT CYGWIN)
     set_target_properties(zlib PROPERTIES VERSION ${ZLIB_FULL_VERSION})
 endif()
 
-if(UNIX)
-    # On unix-like platforms the library is almost always called libz
-   set_target_properties(zlib zlibstatic PROPERTIES OUTPUT_NAME z)
-   if(NOT APPLE)
-     set_target_properties(zlib PROPERTIES LINK_FLAGS "-Wl,--version-script,\"${CMAKE_CURRENT_SOURCE_DIR}/zlib.map\"")
-   endif()
-elseif(BUILD_SHARED_LIBS AND WIN32)
-    # Creates zlib1.dll when building shared library version
-    set_target_properties(zlib PROPERTIES SUFFIX "1.dll")
+if(UNIX AND NOT APPLE)
+    set_target_properties(zlib PROPERTIES LINK_FLAGS "-Wl,--version-script,\"${CMAKE_CURRENT_SOURCE_DIR}/zlib.map\"")
 endif()
 
 if(NOT SKIP_INSTALL_LIBRARIES AND NOT SKIP_INSTALL_ALL )
@@ -240,14 +243,14 @@ endif()
 #============================================================================
 
 if (BUILD_ZLIB_EXAMPLE)
-	add_executable(example test/example.c)
-	target_link_libraries(example zlib)
-	add_test(example example)
+    add_executable(example test/example.c)
+    target_link_libraries(example zlib)
+    add_test(example example)
 endif()
 
 if (BUILD_MINIGZIP)
-	add_executable(minigzip test/minigzip.c)
-	target_link_libraries(minigzip zlib)
+    add_executable(minigzip test/minigzip.c)
+    target_link_libraries(minigzip zlib)
 endif()
 
 if(HAVE_OFF64_T)
